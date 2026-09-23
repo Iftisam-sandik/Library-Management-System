@@ -33,3 +33,8 @@ variable "public_subnet_b_cidr" {
   type        = string
   default     = "10.20.2.0/24"
 }
+
+variable "home_admin_cidr" {
+  description = "Home public IP CIDR allowed for administrative access"
+  type        = string
+}
