@@ -12,23 +12,39 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 
+// Prometheus metrics
+const { register, metricsMiddleware } = require('./metrics');
+
 // Initialize express app
 const app = express();
 
 // Middleware
-app.use(helmet()); // Security headers
+app.use(helmet());
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true
 }));
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined')); // Logging
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res, next) => {
+    try {
+        res.set('Content-Type', register.contentType);
+        res.end(await register.metrics());
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Collect application HTTP metrics
+app.use(metricsMiddleware);
 
 // Health check route
 app.get('/health', (req, res) => {
-    res.json({ 
-        success: true, 
+    res.json({
+        success: true,
         message: 'Library Management System API is running',
         timestamp: new Date().toISOString()
     });
