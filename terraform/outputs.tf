@@ -81,3 +81,11 @@ output "monitoring_server_public_ip" {
 output "monitoring_server_private_ip" {
   value = aws_instance.monitoring_server.private_ip
 }
+
+output "alb_dns_name" {
+  value = aws_lb.app.dns_name
+}
+
+output "alb_target_group_arn" {
+  value = aws_lb_target_group.app.arn
+}
