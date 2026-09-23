@@ -223,7 +223,7 @@ END$$
 DELIMITER ;
 
 
---Return Book
+-- Return Book
 DELIMITER $$
 CREATE PROCEDURE ReturnBook (
     IN p_t_id INT

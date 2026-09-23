@@ -1,12 +1,12 @@
---After issue book
+-- After issue book
 DELIMITER $$
 
 CREATE TRIGGER after_issue_book
 AFTER INSERT
-ON transactions
+ON Transactions
 FOR EACH ROW
 BEGIN
-   UPDATE books
+   UPDATE Books
    SET available_copies = available_copies - 1
    WHERE book_id = NEW.book_id;
 END $$
@@ -14,15 +14,15 @@ END $$
 DELIMITER ;
 
 
---After return book
+-- After return book
 DELIMITER $$
 CREATE TRIGGER after_return_book
 AFTER UPDATE
-ON transactions
+ON Transactions
 FOR EACH ROW
 BEGIN
    IF OLD.return_date IS NULL AND NEW.return_date IS NOT NULL THEN
-      UPDATE books
+      UPDATE Books
       SET available_copies = available_copies + 1
       WHERE book_id = NEW.book_id;
    END IF;
@@ -31,25 +31,25 @@ END $$
 DELIMITER ;
 
 
--- Prevent book issue if member has overdue books
+-- Prevent book issue if member has overdue Books
 DELIMITER $$
 CREATE TRIGGER prevent_overdue_issue
 BEFORE INSERT
-ON transactions
+ON Transactions
 FOR EACH ROW
 BEGIN
    DECLARE overdue_count INT;
    
-   -- Check if member has any overdue books
+   -- Check if member has any overdue Books
    SELECT COUNT(*) INTO overdue_count
-   FROM transactions
+   FROM Transactions
    WHERE member_id = NEW.member_id
    AND return_date IS NULL
    AND due_date < CURDATE();
    
    IF overdue_count > 0 THEN
       SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Cannot issue book: Member has overdue books. Please return them first.';
+      SET MESSAGE_TEXT = 'Cannot issue book: Member has overdue Books. Please return them first.';
    END IF;
 END $$
 
@@ -60,7 +60,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER check_member_expiry
 BEFORE INSERT
-ON transactions
+ON Transactions
 FOR EACH ROW
 BEGIN
    DECLARE member_expiry DATE;
@@ -68,12 +68,12 @@ BEGIN
    
    -- Get member expiry date and current status
    SELECT expiry_date, status INTO member_expiry, member_current_status
-   FROM members
+   FROM Members
    WHERE member_id = NEW.member_id;
    
    -- Update member status if expired
    IF member_expiry < CURDATE() AND member_current_status != 'Expired' THEN
-      UPDATE members
+      UPDATE Members
       SET status = 'Expired'
       WHERE member_id = NEW.member_id;
       
