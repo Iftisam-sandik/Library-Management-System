@@ -1,0 +1,42 @@
+groups:
+  - name: infrastructure-alerts
+    rules:
+      - alert: InstanceDown
+        expr: up{job="node"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Server {{ $labels.instance }} is down"
+          description: "Node Exporter target {{ $labels.instance }} has been unreachable for more than 2 minutes."
+
+  - name: application-alerts
+    rules:
+      - alert: BackendTargetDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend {{ $labels.instance }} is down"
+          description: "Prometheus cannot scrape backend metrics from {{ $labels.instance }}."
+
+      - alert: ApplicationDown
+        expr: probe_success{job="blackbox"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Public application is unavailable"
+          description: "Blackbox Exporter cannot successfully reach the public ALB endpoint."
+
+  - name: database-alerts
+    rules:
+      - alert: MySQLDown
+        expr: (up{job="mysql"} == 0) or (mysql_up{job="mysql"} == 0)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL monitoring detected a database failure"
+          description: "The MySQL exporter is unreachable or cannot connect to MySQL."

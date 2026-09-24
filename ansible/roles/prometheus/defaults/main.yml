@@ -1,0 +1,16 @@
+---
+prometheus_version: "3.14.0"
+prometheus_user: "prometheus"
+prometheus_group: "prometheus"
+
+prometheus_region: "ap-south-1"
+prometheus_project_tag: "production-observability-platform"
+
+prometheus_db_target: "10.20.1.136:9104"
+prometheus_blackbox_target: "http://production-observability-alb-561066648.ap-south-1.elb.amazonaws.com"
+
+prometheus_retention: "7d"
+prometheus_listen_address: "0.0.0.0:9090"
+
+prometheus_alertmanager_target: "127.0.0.1:9093"
+prometheus_blackbox_exporter_target: "127.0.0.1:9115"

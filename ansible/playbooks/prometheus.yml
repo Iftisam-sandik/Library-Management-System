@@ -1,0 +1,7 @@
+---
+- name: Configure Prometheus monitoring server
+  hosts: monitoring_servers
+  become: true
+
+  roles:
+    - prometheus
