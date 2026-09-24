@@ -1,0 +1,70 @@
+loki.source.journal "prometheus_logs" {
+  matches = "_SYSTEMD_UNIT=prometheus.service"
+  max_age = "2h"
+
+  labels = {
+    instance = "monitoring-server",
+    job      = "systemd-journal",
+    service  = "prometheus",
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.source.journal "grafana_logs" {
+  matches = "_SYSTEMD_UNIT=grafana-server.service"
+  max_age = "2h"
+
+  labels = {
+    instance = "monitoring-server",
+    job      = "systemd-journal",
+    service  = "grafana",
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.source.journal "alertmanager_logs" {
+  matches = "_SYSTEMD_UNIT=alertmanager.service"
+  max_age = "2h"
+
+  labels = {
+    instance = "monitoring-server",
+    job      = "systemd-journal",
+    service  = "alertmanager",
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.source.journal "blackbox_logs" {
+  matches = "_SYSTEMD_UNIT=blackbox_exporter.service"
+  max_age = "2h"
+
+  labels = {
+    instance = "monitoring-server",
+    job      = "systemd-journal",
+    service  = "blackbox-exporter",
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.source.journal "loki_logs" {
+  matches = "_SYSTEMD_UNIT=loki.service"
+  max_age = "2h"
+
+  labels = {
+    instance = "monitoring-server",
+    job      = "systemd-journal",
+    service  = "loki",
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://127.0.0.1:3100/loki/api/v1/push"
+  }
+}

@@ -1,0 +1,7 @@
+---
+- name: Configure Alloy monitoring-server log collection
+  hosts: monitoring_servers
+  become: true
+
+  roles:
+    - alloy_monitoring
