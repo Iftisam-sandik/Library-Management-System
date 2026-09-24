@@ -1,0 +1,7 @@
+---
+- name: Configure Grafana
+  hosts: monitoring_servers
+  become: true
+
+  roles:
+    - grafana

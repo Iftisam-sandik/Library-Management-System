@@ -1,0 +1,51 @@
+---
+- name: Ensure Grafana apt keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install Grafana repository signing key
+  ansible.builtin.get_url:
+    url: https://apt.grafana.com/gpg.key
+    dest: /etc/apt/keyrings/grafana.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure Grafana apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+    filename: grafana
+    state: present
+    update_cache: true
+
+- name: Ensure Grafana package is installed
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+
+- name: Ensure datasource provisioning directory exists
+  ansible.builtin.file:
+    path: /etc/grafana/provisioning/datasources
+    state: directory
+    owner: root
+    group: grafana
+    mode: "0755"
+
+- name: Provision Prometheus and Loki datasources
+  ansible.builtin.template:
+    src: datasources.yml.j2
+    dest: /etc/grafana/provisioning/datasources/observability.yml
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: Restart Grafana
+
+- name: Ensure Grafana is enabled and running
+  ansible.builtin.systemd:
+    name: grafana-server
+    enabled: true
+    state: started
