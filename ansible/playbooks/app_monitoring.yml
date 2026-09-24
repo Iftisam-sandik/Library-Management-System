@@ -1,0 +1,8 @@
+---
+- name: Configure application server container monitoring
+  hosts: app_servers
+  become: true
+
+  roles:
+    - docker
+    - cadvisor
