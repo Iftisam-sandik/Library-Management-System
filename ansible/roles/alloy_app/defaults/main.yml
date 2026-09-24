@@ -1,0 +1,3 @@
+---
+alloy_loki_url: "http://10.20.2.4:3100/loki/api/v1/push"
+alloy_config_path: "/etc/alloy/config.alloy"

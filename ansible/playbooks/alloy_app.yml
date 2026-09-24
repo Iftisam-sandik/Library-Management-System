@@ -1,0 +1,7 @@
+---
+- name: Configure Alloy Docker log collection on application servers
+  hosts: app_servers
+  become: true
+
+  roles:
+    - alloy_app
