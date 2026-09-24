@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart mysqld_exporter
+  ansible.builtin.systemd:
+    name: mysqld_exporter
+    state: restarted

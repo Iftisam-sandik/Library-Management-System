@@ -1,0 +1,83 @@
+---
+- name: Install PyMySQL dependency
+  ansible.builtin.apt:
+    name: python3-pymysql
+    state: present
+    update_cache: true
+
+- name: Create mysqld_exporter group
+  ansible.builtin.group:
+    name: "{{ mysqld_exporter_group }}"
+    system: true
+
+- name: Create mysqld_exporter user
+  ansible.builtin.user:
+    name: "{{ mysqld_exporter_user }}"
+    group: "{{ mysqld_exporter_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Download mysqld_exporter
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/mysqld_exporter/releases/download/v{{ mysqld_exporter_version }}/mysqld_exporter-{{ mysqld_exporter_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/mysqld_exporter-{{ mysqld_exporter_version }}.tar.gz"
+    mode: "0644"
+
+- name: Extract mysqld_exporter
+  ansible.builtin.unarchive:
+    src: "/tmp/mysqld_exporter-{{ mysqld_exporter_version }}.tar.gz"
+    dest: /tmp
+    remote_src: true
+    creates: "/tmp/mysqld_exporter-{{ mysqld_exporter_version }}.linux-amd64/mysqld_exporter"
+
+- name: Install mysqld_exporter binary
+  ansible.builtin.copy:
+    src: "/tmp/mysqld_exporter-{{ mysqld_exporter_version }}.linux-amd64/mysqld_exporter"
+    dest: /usr/local/bin/mysqld_exporter
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  notify: Restart mysqld_exporter
+
+- name: Configure MySQL monitoring user
+  community.mysql.mysql_user:
+    name: "{{ mysqld_exporter_user }}"
+    host: localhost
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ mysqld_exporter_password }}"
+    salt: "{{ mysqld_exporter_password_salt }}"
+    priv: "*.*:PROCESS,REPLICATION CLIENT,SELECT"
+    state: present
+    update_password: always
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    check_implicit_admin: true
+  no_log: true
+
+- name: Install mysqld_exporter client config
+  ansible.builtin.template:
+    src: mysqld_exporter.cnf.j2
+    dest: /etc/mysqld_exporter.cnf
+    owner: root
+    group: "{{ mysqld_exporter_group }}"
+    mode: "0640"
+  no_log: true
+  notify: Restart mysqld_exporter
+
+- name: Install mysqld_exporter systemd service
+  ansible.builtin.template:
+    src: mysqld_exporter.service.j2
+    dest: /etc/systemd/system/mysqld_exporter.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart mysqld_exporter
+
+- name: Ensure mysqld_exporter is enabled and running
+  ansible.builtin.systemd:
+    name: mysqld_exporter
+    enabled: true
+    state: started

@@ -1,0 +1,13 @@
+---
+- name: Configure database server monitoring
+  hosts: db_servers
+  become: true
+
+  vars:
+    mysqld_exporter_password: >-
+      {{ lookup('ansible.builtin.file',
+      '/home/ubuntu/.ansible-secrets/mysqld_exporter_password') | trim }}
+
+  roles:
+    - swap
+    - mysqld_exporter

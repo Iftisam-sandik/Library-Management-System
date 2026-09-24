@@ -1,0 +1,4 @@
+---
+- name: Apply swappiness
+  ansible.builtin.command:
+    cmd: sysctl -p /etc/sysctl.d/99-swappiness.conf

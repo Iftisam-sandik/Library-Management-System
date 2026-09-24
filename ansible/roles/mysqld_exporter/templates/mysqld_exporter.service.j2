@@ -1,0 +1,17 @@
+[Unit]
+Description=Prometheus MySQL Exporter
+Wants=network-online.target
+After=network-online.target mysql.service
+
+[Service]
+User={{ mysqld_exporter_user }}
+Group={{ mysqld_exporter_group }}
+Type=simple
+ExecStart=/usr/local/bin/mysqld_exporter \
+  --config.my-cnf=/etc/mysqld_exporter.cnf \
+  --web.listen-address=0.0.0.0:{{ mysqld_exporter_port }}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

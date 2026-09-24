@@ -1,0 +1,6 @@
+---
+mysqld_exporter_version: "0.20.0"
+mysqld_exporter_user: "mysqld_exporter"
+mysqld_exporter_group: "mysqld_exporter"
+mysqld_exporter_port: 9104
+mysqld_exporter_password_salt: "observabilitymysql12"
