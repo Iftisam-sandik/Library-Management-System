@@ -1,0 +1,47 @@
+{
+  "resource": "folders",
+  "name": "afz6xramrmjnkd",
+  "folder": "",
+  "data": {
+    "kind": "Folder",
+    "apiVersion": "folder.grafana.app/v1",
+    "metadata": {
+      "name": "afz6xramrmjnkd",
+      "namespace": "default",
+      "uid": "483745b7-654c-4606-839e-93829e8a546c",
+      "generation": 1,
+      "creationTimestamp": "2026-09-24T05:37:00Z",
+      "labels": {
+        "grafana.app/deprecatedInternalID": "4318272027672576"
+      },
+      "annotations": {
+        "grafana.app/createdBy": "user:ffz3kx15r4qv4a"
+      },
+      "managedFields": [
+        {
+          "manager": "grafana",
+          "operation": "Update",
+          "apiVersion": "folder.grafana.app/v1",
+          "time": "2026-09-24T05:37:00Z",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:grafana.app/grant-permissions": {}
+              }
+            },
+            "f:spec": {
+              "f:description": {},
+              "f:title": {}
+            }
+          }
+        }
+      ]
+    },
+    "spec": {
+      "title": "Database Monitoring",
+      "description": ""
+    }
+  }
+}

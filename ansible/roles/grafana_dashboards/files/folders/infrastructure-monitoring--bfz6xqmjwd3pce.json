@@ -1,0 +1,47 @@
+{
+  "resource": "folders",
+  "name": "bfz6xqmjwd3pce",
+  "folder": "",
+  "data": {
+    "kind": "Folder",
+    "apiVersion": "folder.grafana.app/v1",
+    "metadata": {
+      "name": "bfz6xqmjwd3pce",
+      "namespace": "default",
+      "uid": "536bcde4-0e94-43f4-9999-4683a8fc2c11",
+      "generation": 1,
+      "creationTimestamp": "2026-09-24T05:36:48Z",
+      "labels": {
+        "grafana.app/deprecatedInternalID": "4318219611455488"
+      },
+      "annotations": {
+        "grafana.app/createdBy": "user:ffz3kx15r4qv4a"
+      },
+      "managedFields": [
+        {
+          "manager": "grafana",
+          "operation": "Update",
+          "apiVersion": "folder.grafana.app/v1",
+          "time": "2026-09-24T05:36:48Z",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:grafana.app/grant-permissions": {}
+              }
+            },
+            "f:spec": {
+              "f:description": {},
+              "f:title": {}
+            }
+          }
+        }
+      ]
+    },
+    "spec": {
+      "title": "Infrastructure Monitoring",
+      "description": ""
+    }
+  }
+}

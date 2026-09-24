@@ -1,0 +1,101 @@
+---
+- name: Find backed-up Grafana folders
+  ansible.builtin.set_fact:
+    grafana_folder_files: >-
+      {{ query('ansible.builtin.fileglob',
+      role_path + '/files/folders/*.json') }}
+  changed_when: false
+
+- name: Check existing Grafana folders
+  ansible.builtin.uri:
+    url: >-
+      {{ grafana_dashboards_url }}/apis/folder.grafana.app/v1/namespaces/{{
+      grafana_namespace }}/folders/{{
+      (lookup('ansible.builtin.file', item) | from_json).data.metadata.name }}
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    status_code:
+      - 200
+      - 404
+    return_content: true
+  loop: "{{ grafana_folder_files }}"
+  register: grafana_folder_checks
+  changed_when: false
+  no_log: true
+
+- name: Restore missing Grafana folders
+  ansible.builtin.uri:
+    url: >-
+      {{ grafana_dashboards_url }}/apis/folder.grafana.app/v1/namespaces/{{
+      grafana_namespace }}/folders
+    method: POST
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    body_format: json
+    body:
+      kind: Folder
+      apiVersion: folder.grafana.app/v1
+      metadata:
+        name: "{{ folder_export.data.metadata.name }}"
+      spec: "{{ folder_export.data.spec }}"
+    status_code:
+      - 200
+      - 201
+  vars:
+    folder_export: "{{ lookup('ansible.builtin.file', item.item) | from_json }}"
+  loop: "{{ grafana_folder_checks.results }}"
+  when: item.status == 404
+  no_log: true
+
+- name: Find backed-up Grafana dashboards
+  ansible.builtin.set_fact:
+    grafana_dashboard_files: >-
+      {{ query('ansible.builtin.fileglob',
+      role_path + '/files/dashboards/*.json') }}
+  changed_when: false
+
+- name: Check existing Grafana dashboards
+  ansible.builtin.uri:
+    url: >-
+      {{ grafana_dashboards_url }}/apis/dashboard.grafana.app/v2/namespaces/{{
+      grafana_namespace }}/dashboards/{{
+      (lookup('ansible.builtin.file', item) | from_json).data.metadata.name }}
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    status_code:
+      - 200
+      - 404
+    return_content: true
+  loop: "{{ grafana_dashboard_files }}"
+  register: grafana_dashboard_checks
+  changed_when: false
+  no_log: true
+
+- name: Restore missing Grafana dashboards
+  ansible.builtin.uri:
+    url: >-
+      {{ grafana_dashboards_url }}/apis/dashboard.grafana.app/v2/namespaces/{{
+      grafana_namespace }}/dashboards
+    method: POST
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    body_format: json
+    body:
+      kind: Dashboard
+      apiVersion: dashboard.grafana.app/v2
+      metadata:
+        name: "{{ dashboard_export.data.metadata.name }}"
+        annotations:
+          grafana.app/folder: >-
+            {{ dashboard_export.data.metadata.annotations['grafana.app/folder'] }}
+      spec: "{{ dashboard_export.data.spec }}"
+    status_code:
+      - 200
+      - 201
+  vars:
+    dashboard_export: "{{ lookup('ansible.builtin.file', item.item) | from_json }}"
+  loop: "{{ grafana_dashboard_checks.results }}"
+  when: item.status == 404
+  no_log: true
