@@ -1,0 +1,7 @@
+---
+- name: Configure Loki
+  hosts: monitoring_servers
+  become: true
+
+  roles:
+    - loki
