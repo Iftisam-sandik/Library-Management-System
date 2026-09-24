@@ -1,0 +1,17 @@
+---
+- name: Deploy Library Management System
+  hosts: app_servers
+  become: true
+
+  vars:
+    library_db_password: >-
+      {{ lookup('ansible.builtin.file',
+      '/home/ubuntu/.ansible-secrets/library_db_password') | trim }}
+
+    library_jwt_secret: >-
+      {{ lookup('ansible.builtin.file',
+      '/home/ubuntu/.ansible-secrets/library_jwt_secret') | trim }}
+
+  roles:
+    - docker
+    - app_deploy

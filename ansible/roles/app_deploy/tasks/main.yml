@@ -1,0 +1,66 @@
+---
+- name: Ensure Git is installed
+  ansible.builtin.apt:
+    name: git
+    state: present
+    update_cache: true
+
+- name: Clone or update application repository
+  ansible.builtin.git:
+    repo: "{{ app_repo_url }}"
+    dest: "{{ app_deploy_path }}"
+    version: "{{ app_repo_branch }}"
+    update: true
+    force: false
+  become_user: ubuntu
+  register: app_repo_state
+
+- name: Install backend environment file
+  ansible.builtin.template:
+    src: env.backend.j2
+    dest: "{{ app_deploy_path }}/.env.backend"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0600"
+  register: app_env_state
+  no_log: true
+
+- name: Check currently running Compose services
+  ansible.builtin.command:
+    cmd: docker compose ps --services --filter status=running
+    chdir: "{{ app_deploy_path }}"
+  become_user: ubuntu
+  register: app_running_services
+  changed_when: false
+
+- name: Build and deploy application containers
+  ansible.builtin.command:
+    cmd: docker compose up -d --build
+    chdir: "{{ app_deploy_path }}"
+  become_user: ubuntu
+  when: >
+    app_repo_state.changed or
+    app_env_state.changed or
+    'backend' not in app_running_services.stdout_lines or
+    'frontend' not in app_running_services.stdout_lines
+  register: app_compose_deploy
+
+- name: Wait for backend health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_backend_port }}/health"
+    method: GET
+    status_code: 200
+  register: backend_health
+  retries: 12
+  delay: 5
+  until: backend_health.status == 200
+
+- name: Wait for frontend
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_frontend_port }}/"
+    method: GET
+    status_code: 200
+  register: frontend_health
+  retries: 12
+  delay: 5
+  until: frontend_health.status == 200

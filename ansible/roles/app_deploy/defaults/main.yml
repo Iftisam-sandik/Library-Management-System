@@ -1,0 +1,14 @@
+---
+app_repo_url: "https://github.com/Iftisam-sandik/Library-Management-System.git"
+app_repo_branch: "main"
+app_deploy_path: "/home/ubuntu/Library-Management-System"
+
+app_db_host: "10.20.1.136"
+app_db_port: 3306
+app_db_user: "library_app"
+app_db_name: "LibraryManagementSystem"
+
+app_backend_port: 5000
+app_frontend_port: 80
+app_node_env: "production"
+app_frontend_url: "http://localhost"
