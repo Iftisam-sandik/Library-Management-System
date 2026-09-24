@@ -70,6 +70,14 @@ resource "aws_security_group" "app" {
     security_groups = [aws_security_group.monitoring.id]
   }
 
+  ingress {
+    description     = "SSH from monitoring server"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.monitoring.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -117,6 +125,14 @@ resource "aws_security_group" "db" {
     description     = "mysqld_exporter from monitoring server"
     from_port       = 9104
     to_port         = 9104
+    protocol        = "tcp"
+    security_groups = [aws_security_group.monitoring.id]
+  }
+
+  ingress {
+    description     = "SSH from monitoring server"
+    from_port       = 22
+    to_port         = 22
     protocol        = "tcp"
     security_groups = [aws_security_group.monitoring.id]
   }
