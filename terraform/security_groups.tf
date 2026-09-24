@@ -164,6 +164,14 @@ resource "aws_security_group" "monitoring" {
     self        = true
   }
 
+  ingress {
+    description = "Loki from private VPC network"
+    from_port   = 3100
+    to_port     = 3100
+    protocol    = "tcp"
+    cidr_blocks = ["10.20.0.0/16"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
