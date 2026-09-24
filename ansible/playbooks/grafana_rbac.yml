@@ -1,0 +1,12 @@
+---
+- name: Configure Grafana folders, teams and RBAC
+  hosts: monitoring_servers
+  become: true
+
+  vars:
+    grafana_service_account_token: >-
+      {{ lookup('ansible.builtin.file',
+      '/home/ubuntu/.ansible-secrets/grafana_service_account_token') | trim }}
+
+  roles:
+    - grafana_rbac

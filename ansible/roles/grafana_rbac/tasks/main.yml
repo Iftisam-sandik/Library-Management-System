@@ -1,0 +1,211 @@
+---
+- name: Ensure Grafana folders exist
+  community.grafana.grafana_folder:
+    grafana_url: "{{ grafana_rbac_url }}"
+    grafana_api_key: "{{ grafana_service_account_token }}"
+    title: "{{ item.value.title }}"
+    uid: "{{ item.value.uid }}"
+    state: present
+    skip_version_check: true
+  loop: "{{ grafana_rbac_folders | dict2items }}"
+  no_log: true
+
+- name: Ensure Grafana teams and exact memberships
+  community.grafana.grafana_team:
+    grafana_url: "{{ grafana_rbac_url }}"
+    grafana_api_key: "{{ grafana_service_account_token }}"
+    name: "{{ item.name }}"
+    email: "{{ item.email }}"
+    members: "{{ item.members }}"
+    enforce_members: true
+    state: present
+    skip_version_check: true
+  loop: "{{ grafana_rbac_teams }}"
+  no_log: true
+
+- name: Read Grafana organization users
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/org/users"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    return_content: true
+    status_code: 200
+  register: grafana_org_users
+  changed_when: false
+  no_log: true
+
+- name: Read Grafana teams
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/teams/search?perpage=100"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    return_content: true
+    status_code: 200
+  register: grafana_team_search
+  changed_when: false
+  no_log: true
+
+- name: Resolve Grafana user and team IDs
+  ansible.builtin.set_fact:
+    grafana_admin_user_id: >-
+      {{ grafana_org_users.json
+         | selectattr('login', 'equalto', 'admin')
+         | map(attribute='userId')
+         | first }}
+    grafana_developers_team_id: >-
+      {{ grafana_team_search.json.teams
+         | selectattr('name', 'equalto', 'Developers')
+         | map(attribute='id')
+         | first }}
+    grafana_operations_team_id: >-
+      {{ grafana_team_search.json.teams
+         | selectattr('name', 'equalto', 'Operations')
+         | map(attribute='id')
+         | first }}
+    grafana_qa_team_id: >-
+      {{ grafana_team_search.json.teams
+         | selectattr('name', 'equalto', 'QA')
+         | map(attribute='id')
+         | first }}
+  changed_when: false
+  no_log: true
+
+- name: Read Application Monitoring permissions
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/folders/{{ grafana_rbac_folders.application.uid }}/permissions"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    return_content: true
+    status_code: 200
+  register: grafana_app_acl
+  changed_when: false
+  no_log: true
+
+- name: Apply Application Monitoring permissions
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/folders/{{ grafana_rbac_folders.application.uid }}/permissions"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    body_format: json
+    body:
+      items:
+        - userId: "{{ grafana_admin_user_id | int }}"
+          permission: 4
+        - teamId: "{{ grafana_developers_team_id | int }}"
+          permission: 2
+        - teamId: "{{ grafana_operations_team_id | int }}"
+          permission: 2
+        - teamId: "{{ grafana_qa_team_id | int }}"
+          permission: 1
+    status_code: 200
+  when: >
+    (grafana_app_acl.json | length != 4) or
+    ((grafana_app_acl.json | selectattr('userId', 'defined')
+      | selectattr('userId', 'equalto', grafana_admin_user_id | int)
+      | selectattr('permission', 'equalto', 4) | list | length) != 1) or
+    ((grafana_app_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_developers_team_id | int)
+      | selectattr('permission', 'equalto', 2) | list | length) != 1) or
+    ((grafana_app_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_operations_team_id | int)
+      | selectattr('permission', 'equalto', 2) | list | length) != 1) or
+    ((grafana_app_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_qa_team_id | int)
+      | selectattr('permission', 'equalto', 1) | list | length) != 1)
+  no_log: true
+
+- name: Read Infrastructure Monitoring permissions
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/folders/{{ grafana_rbac_folders.infrastructure.uid }}/permissions"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    return_content: true
+    status_code: 200
+  register: grafana_infra_acl
+  changed_when: false
+  no_log: true
+
+- name: Apply Infrastructure Monitoring permissions
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/folders/{{ grafana_rbac_folders.infrastructure.uid }}/permissions"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    body_format: json
+    body:
+      items:
+        - userId: "{{ grafana_admin_user_id | int }}"
+          permission: 4
+        - teamId: "{{ grafana_operations_team_id | int }}"
+          permission: 2
+        - teamId: "{{ grafana_developers_team_id | int }}"
+          permission: 1
+        - teamId: "{{ grafana_qa_team_id | int }}"
+          permission: 1
+    status_code: 200
+  when: >
+    (grafana_infra_acl.json | length != 4) or
+    ((grafana_infra_acl.json | selectattr('userId', 'defined')
+      | selectattr('userId', 'equalto', grafana_admin_user_id | int)
+      | selectattr('permission', 'equalto', 4) | list | length) != 1) or
+    ((grafana_infra_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_operations_team_id | int)
+      | selectattr('permission', 'equalto', 2) | list | length) != 1) or
+    ((grafana_infra_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_developers_team_id | int)
+      | selectattr('permission', 'equalto', 1) | list | length) != 1) or
+    ((grafana_infra_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_qa_team_id | int)
+      | selectattr('permission', 'equalto', 1) | list | length) != 1)
+  no_log: true
+
+- name: Read Database Monitoring permissions
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/folders/{{ grafana_rbac_folders.database.uid }}/permissions"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    return_content: true
+    status_code: 200
+  register: grafana_db_acl
+  changed_when: false
+  no_log: true
+
+- name: Apply Database Monitoring permissions
+  ansible.builtin.uri:
+    url: "{{ grafana_rbac_url }}/api/folders/{{ grafana_rbac_folders.database.uid }}/permissions"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ grafana_service_account_token }}"
+    body_format: json
+    body:
+      items:
+        - userId: "{{ grafana_admin_user_id | int }}"
+          permission: 4
+        - teamId: "{{ grafana_operations_team_id | int }}"
+          permission: 2
+        - teamId: "{{ grafana_developers_team_id | int }}"
+          permission: 1
+        - teamId: "{{ grafana_qa_team_id | int }}"
+          permission: 1
+    status_code: 200
+  when: >
+    (grafana_db_acl.json | length != 4) or
+    ((grafana_db_acl.json | selectattr('userId', 'defined')
+      | selectattr('userId', 'equalto', grafana_admin_user_id | int)
+      | selectattr('permission', 'equalto', 4) | list | length) != 1) or
+    ((grafana_db_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_operations_team_id | int)
+      | selectattr('permission', 'equalto', 2) | list | length) != 1) or
+    ((grafana_db_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_developers_team_id | int)
+      | selectattr('permission', 'equalto', 1) | list | length) != 1) or
+    ((grafana_db_acl.json | selectattr('teamId', 'defined')
+      | selectattr('teamId', 'equalto', grafana_qa_team_id | int)
+      | selectattr('permission', 'equalto', 1) | list | length) != 1)
+  no_log: true

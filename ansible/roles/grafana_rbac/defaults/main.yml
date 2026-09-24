@@ -1,0 +1,34 @@
+---
+grafana_rbac_url: "http://127.0.0.1:3000"
+
+grafana_rbac_teams:
+  - name: Developers
+    email: ""
+    members:
+      - admin@localhost
+      - developer@example.com
+
+  - name: Operations
+    email: ""
+    members:
+      - admin@localhost
+      - operations@example.com
+
+  - name: QA
+    email: ""
+    members:
+      - admin@localhost
+      - qa@example.com
+
+grafana_rbac_folders:
+  application:
+    title: "Application Monitoring"
+    uid: "dfz6xp4ed40e8b"
+
+  infrastructure:
+    title: "Infrastructure Monitoring"
+    uid: "bfz6xqmjwd3pce"
+
+  database:
+    title: "Database Monitoring"
+    uid: "afz6xramrmjnkd"
