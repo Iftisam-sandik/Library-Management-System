@@ -1,0 +1,5 @@
+---
+blackbox_exporter_version: "0.28.0"
+blackbox_exporter_user: "blackbox_exporter"
+blackbox_exporter_group: "blackbox_exporter"
+blackbox_exporter_listen_address: "127.0.0.1:9115"

@@ -1,0 +1,7 @@
+---
+- name: Configure Blackbox Exporter
+  hosts: monitoring_servers
+  become: true
+
+  roles:
+    - blackbox_exporter
