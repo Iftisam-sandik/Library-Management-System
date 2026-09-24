@@ -1,0 +1,12 @@
+---
+library_db_name: "LibraryManagementSystem"
+library_db_user: "library_app"
+library_db_user_host: "10.20.%"
+library_db_password_salt: "libraryappansible123"
+
+library_db_expected_tables: 7
+library_db_expected_procedures: 8
+library_db_expected_functions: 8
+library_db_expected_triggers: 4
+
+library_db_sql_dir: "/opt/library-database"

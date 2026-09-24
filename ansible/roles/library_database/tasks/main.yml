@@ -1,0 +1,118 @@
+---
+- name: Ensure PyMySQL is installed
+  ansible.builtin.apt:
+    name: python3-pymysql
+    state: present
+
+- name: Create database SQL directory
+  ansible.builtin.file:
+    path: "{{ library_db_sql_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copy database SQL files
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ library_db_sql_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - schema.sql
+    - sample_data.sql
+    - functions.sql
+    - procedures.sql
+    - triggers.sql
+
+- name: Check existing library table count
+  ansible.builtin.command:
+    argv:
+      - mysql
+      - --protocol=socket
+      - -NBe
+      - "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='{{ library_db_name }}';"
+  register: library_existing_tables
+  changed_when: false
+
+- name: Refuse destructive import into partial existing database
+  ansible.builtin.fail:
+    msg: >-
+      {{ library_db_name }} already contains
+      {{ library_existing_tables.stdout | int }} tables.
+      Automatic schema import is disabled to protect existing data.
+  when:
+    - (library_existing_tables.stdout | int) > 0
+    - (library_existing_tables.stdout | int) != library_db_expected_tables
+
+- name: Initialize fresh library database
+  when: (library_existing_tables.stdout | int) == 0
+  block:
+    - name: Import database schema
+      ansible.builtin.shell: >
+        mysql --protocol=socket
+        < {{ library_db_sql_dir }}/schema.sql
+
+    - name: Import sample data
+      ansible.builtin.shell: >
+        mysql --protocol=socket {{ library_db_name }}
+        < {{ library_db_sql_dir }}/sample_data.sql
+
+    - name: Import database functions
+      ansible.builtin.shell: >
+        mysql --protocol=socket {{ library_db_name }}
+        < {{ library_db_sql_dir }}/functions.sql
+
+    - name: Import stored procedures
+      ansible.builtin.shell: >
+        mysql --protocol=socket {{ library_db_name }}
+        < {{ library_db_sql_dir }}/procedures.sql
+
+    - name: Import database triggers
+      ansible.builtin.shell: >
+        mysql --protocol=socket {{ library_db_name }}
+        < {{ library_db_sql_dir }}/triggers.sql
+
+- name: Ensure application database user and privileges
+  community.mysql.mysql_user:
+    name: "{{ library_db_user }}"
+    host: "{{ library_db_user_host }}"
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ library_db_password }}"
+    salt: "{{ library_db_password_salt }}"
+    priv: "{{ library_db_name }}.*:SELECT,INSERT,UPDATE,DELETE,EXECUTE"
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  no_log: true
+
+- name: Check database object counts
+  ansible.builtin.command:
+    argv:
+      - mysql
+      - --protocol=socket
+      - -NBe
+      - >-
+        SELECT
+        (SELECT COUNT(*) FROM information_schema.tables
+        WHERE table_schema='{{ library_db_name }}'),
+        (SELECT COUNT(*) FROM information_schema.routines
+        WHERE routine_schema='{{ library_db_name }}'
+        AND routine_type='PROCEDURE'),
+        (SELECT COUNT(*) FROM information_schema.routines
+        WHERE routine_schema='{{ library_db_name }}'
+        AND routine_type='FUNCTION'),
+        (SELECT COUNT(*) FROM information_schema.triggers
+        WHERE trigger_schema='{{ library_db_name }}');
+  register: library_db_objects
+  changed_when: false
+
+- name: Validate database objects
+  ansible.builtin.assert:
+    that:
+      - (library_db_objects.stdout.split()[0] | int) == library_db_expected_tables
+      - (library_db_objects.stdout.split()[1] | int) == library_db_expected_procedures
+      - (library_db_objects.stdout.split()[2] | int) == library_db_expected_functions
+      - (library_db_objects.stdout.split()[3] | int) == library_db_expected_triggers
+    fail_msg: "Library database object validation failed."
+    success_msg: "Library database objects are valid."

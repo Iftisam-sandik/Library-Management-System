@@ -1,0 +1,13 @@
+---
+- name: Configure Library Management System database
+  hosts: db_servers
+  become: true
+
+  vars:
+    library_db_password: >-
+      {{ lookup('ansible.builtin.file',
+      '/home/ubuntu/.ansible-secrets/library_db_password') | trim }}
+
+  roles:
+    - mysql_server
+    - library_database
