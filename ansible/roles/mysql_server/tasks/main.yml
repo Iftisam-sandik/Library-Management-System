@@ -1,0 +1,38 @@
+---
+- name: Install MySQL server packages
+  ansible.builtin.apt:
+    name:
+      - mysql-server
+      - python3-pymysql
+    state: present
+    update_cache: true
+
+- name: Ensure MySQL is enabled and running
+  ansible.builtin.systemd:
+    name: mysql
+    enabled: true
+    state: started
+
+- name: Configure MySQL private bind address
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^\s*bind-address\s*='
+    line: "bind-address = {{ mysql_bind_address }}"
+    backup: true
+  notify: Restart MySQL
+
+- name: Keep MySQL X Protocol local only
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^\s*mysqlx-bind-address\s*='
+    line: "mysqlx-bind-address = 127.0.0.1"
+  notify: Restart MySQL
+
+- name: Apply pending MySQL configuration changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for MySQL on private interface
+  ansible.builtin.wait_for:
+    host: "{{ mysql_bind_address }}"
+    port: "{{ mysql_port }}"
+    timeout: 30
