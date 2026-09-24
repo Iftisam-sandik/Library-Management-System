@@ -1,0 +1,5 @@
+---
+alertmanager_version: "0.34.1"
+alertmanager_user: "alertmanager"
+alertmanager_group: "alertmanager"
+alertmanager_listen_address: "127.0.0.1:9093"
