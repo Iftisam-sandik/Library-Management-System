@@ -2,6 +2,14 @@
 
 A complete, modern Library Management System built with **React**, **Node.js**, **Express**, and **MySQL**.
 
+## ☁️ DevOps & Observability Deployment
+
+This fork also includes a production-style AWS deployment with Terraform, Ansible, Docker, Prometheus, Grafana, Loki, Alertmanager, and centralized monitoring.
+
+For the complete infrastructure, monitoring, logging, alerting, and automation documentation, see:
+
+[DevOps & Observability Documentation](docs/DEVOPS_OBSERVABILITY.md)
+
 ## 🌟 Features
 
 ### Core Functionality
