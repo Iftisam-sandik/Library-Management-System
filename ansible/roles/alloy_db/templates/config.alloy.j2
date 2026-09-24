@@ -1,0 +1,17 @@
+loki.source.journal "mysql_logs" {
+  matches    = "UNIT=mysql.service"
+  max_age    = "2h"
+  forward_to = [loki.write.central.receiver]
+
+  labels = {
+    instance = "db-server",
+    job      = "systemd-journal",
+    service  = "mysql",
+  }
+}
+
+loki.write "central" {
+  endpoint {
+    url = "{{ alloy_loki_url }}"
+  }
+}

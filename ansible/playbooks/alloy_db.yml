@@ -1,0 +1,7 @@
+---
+- name: Configure Alloy MySQL log collection
+  hosts: db_servers
+  become: true
+
+  roles:
+    - alloy_db
