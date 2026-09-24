@@ -1,0 +1,47 @@
+{
+  "resource": "folders",
+  "name": "dfz6xp4ed40e8b",
+  "folder": "",
+  "data": {
+    "kind": "Folder",
+    "apiVersion": "folder.grafana.app/v1",
+    "metadata": {
+      "name": "dfz6xp4ed40e8b",
+      "namespace": "default",
+      "uid": "93e316c3-5069-45bc-bc3d-68d3c2611ace",
+      "generation": 1,
+      "creationTimestamp": "2026-09-24T05:36:20Z",
+      "labels": {
+        "grafana.app/deprecatedInternalID": "4318101730541568"
+      },
+      "annotations": {
+        "grafana.app/createdBy": "user:ffz3kx15r4qv4a"
+      },
+      "managedFields": [
+        {
+          "manager": "grafana",
+          "operation": "Update",
+          "apiVersion": "folder.grafana.app/v1",
+          "time": "2026-09-24T05:36:20Z",
+          "fieldsType": "FieldsV1",
+          "fieldsV1": {
+            "f:metadata": {
+              "f:annotations": {
+                ".": {},
+                "f:grafana.app/grant-permissions": {}
+              }
+            },
+            "f:spec": {
+              "f:description": {},
+              "f:title": {}
+            }
+          }
+        }
+      ]
+    },
+    "spec": {
+      "title": "Application Monitoring",
+      "description": ""
+    }
+  }
+}
